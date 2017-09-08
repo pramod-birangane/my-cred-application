@@ -25,8 +25,8 @@ class ProductsController extends Controller {
      * @Route("/product/edit/", name="edit_product_withoutparam")
      * @Route("/product/edit/{productId}", name="edit_product_withparam")
      */
-    public function editProductAction($productId=null) {
-        if($productId === null){
+    public function editProductAction($productId = null) {
+        if ($productId === null) {
             return $this->render("AdminBundle:AdminDesign:message.html.twig");
         } else {
             return $this->render("AdminBundle:AdminDesign:edit_product.html.twig");

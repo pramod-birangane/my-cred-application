@@ -1,0 +1,12 @@
+# This file is auto-generated during the composer install
+parameters:
+    database_host: 127.0.0.1
+    database_port: null
+    database_name: my_crud_application_dev
+    database_user: symfony_prod
+    database_password: symfony_prod
+    mailer_transport: smtp
+    mailer_host: 127.0.0.1
+    mailer_user: null
+    mailer_password: null
+    secret: f179e0f32f064bb45e26e4fa2730c4f496f32092

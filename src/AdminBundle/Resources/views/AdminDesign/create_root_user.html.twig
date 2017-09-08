@@ -1,0 +1,14 @@
+<html>
+    <head></head>
+    <body>
+        <h1>Create Root User</h1>
+        {% for message in app.flashes('error') %}
+            <div class="flash-error">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {{ form_start(create_root_user_form) }}
+        {{ form_widget(create_root_user_form) }}
+        {{ form_end(create_root_user_form) }}
+    </body>
+</html>
