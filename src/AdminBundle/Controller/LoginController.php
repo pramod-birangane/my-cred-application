@@ -6,10 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use AdminBundle\Entity\LoginDetails;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -82,7 +84,30 @@ class LoginController extends Controller {
      * @Route("/login/", name="login")
      */
     public function loginAction() {
-        return $this->render('AdminBundle:AdminDesign:login.html.twig');
+        
+        $objLoginDetails = new LoginDetails();
+        
+        $formManager = $this->createFormBuilder($objLoginDetails);
+        $formManager->add('username', TextType::class, array('error_bubbling' => true));
+        $formManager->add('password', PasswordType::class, array('error_bubbling' => true));
+        $formManager->add('remember_me', CheckboxType::class, array('label'=>'Remember Me', 'required' => false));
+        $formManager->add('login', SubmitType::class, array('label'=>'Login'));
+        $actualForm = $formManager->getForm();
+        $htmlForm = $actualForm->createView();
+        $htmlForm->vars["errors"];
+        
+        $actualForm->handleRequest(Request::createFromGlobals());
+        if($actualForm->isSubmitted() ){
+            if($actualForm->isValid()){
+                echo "<pre>";
+                $data = $actualForm->getData();
+                print_r($data);
+                die("Done");
+            } else {
+                
+            }
+        }
+        return $this->render('AdminBundle:AdminDesign:login.html.twig', array('form' => $htmlForm));
     }
 
     /**

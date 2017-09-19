@@ -3,6 +3,7 @@
 namespace AdminBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * LoginDetails
@@ -23,24 +24,32 @@ class LoginDetails
 
     /**
      * @var string
-     *
+     * @Assert\Email(message="Please enter valid email id")
      * @ORM\Column(name="email", type="string", length=255, unique=true)
      */
     private $email;
 
     /**
      * @var string
-     *
+     * @Assert\NotBlank(message="Username can not be blank")
+     * @Assert\Regex("/^([a-zA-Z]+(.)?[\s]*)$/")
      * @ORM\Column(name="username", type="string", length=50, unique=true)
      */
     private $username;
 
     /**
      * @var string
-     *
+     * @Assert\NotBlank(message="Password can not be blank")
      * @ORM\Column(name="password", type="string", length=255)
      */
     private $password;
+    
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="$remember_me", type="boolean")
+     */
+    private $remember_me;
 
     /**
      * @var \DateTime
@@ -219,5 +228,28 @@ class LoginDetails
     {
         return $this->lastlogin;
     }
-}
 
+    /**
+     * Set rememberMe
+     *
+     * @param boolean $rememberMe
+     *
+     * @return LoginDetails
+     */
+    public function setRememberMe($rememberMe)
+    {
+        $this->remember_me = $rememberMe;
+
+        return $this;
+    }
+
+    /**
+     * Get rememberMe
+     *
+     * @return boolean
+     */
+    public function getRememberMe()
+    {
+        return $this->remember_me;
+    }
+}
