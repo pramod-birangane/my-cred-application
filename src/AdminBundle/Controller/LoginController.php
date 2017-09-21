@@ -6,13 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use AdminBundle\Entity\LoginDetails;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use AdminBundle\Service\CommonFunctions;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 
@@ -83,38 +82,73 @@ class LoginController extends Controller {
     /**
      * @Route("/login/", name="login")
      */
-    public function loginAction() {
+    public function loginAction(Request $request) {
         
-        $objLoginDetails = new LoginDetails();
+        $objUserEnteredLoginDetails = new LoginDetails();
         
-        $formManager = $this->createFormBuilder($objLoginDetails);
-        $formManager->add('username', TextType::class, array('error_bubbling' => true));
-        $formManager->add('password', PasswordType::class, array('error_bubbling' => true));
+        $formManager = $this->createFormBuilder($objUserEnteredLoginDetails);
+        $formManager->add('username', TextType::class, array('attr' => array('maxlength' => '50')));
+        $formManager->add('password', PasswordType::class, array('attr' => array('maxlength' => '50')));
         $formManager->add('remember_me', CheckboxType::class, array('label'=>'Remember Me', 'required' => false));
         $formManager->add('login', SubmitType::class, array('label'=>'Login'));
         $actualForm = $formManager->getForm();
-        $htmlForm = $actualForm->createView();
-        $htmlForm->vars["errors"];
-        
-        $actualForm->handleRequest(Request::createFromGlobals());
+        $actualForm->getErrors(true);
+        $actualForm->handleRequest($request);
         if($actualForm->isSubmitted() ){
             if($actualForm->isValid()){
-                echo "<pre>";
-                $data = $actualForm->getData();
-                print_r($data);
-                die("Done");
-            } else {
-                
+                if($this->authenticateUser($objUserEnteredLoginDetails) === true){
+                    return $this->redirectToRoute("products");
+                }
             }
         }
+        $htmlForm = $actualForm->createView();
         return $this->render('AdminBundle:AdminDesign:login.html.twig', array('form' => $htmlForm));
+    }
+    
+    private function initialiseUserSession(LoginDetails $objLoggedInUser){
+        $session = $this->container->get('session');
+        $session->set("LoggedinUserData", $objLoggedInUser);
+    }
+
+    public static function authenticateUserSession($session){
+        if(!($session->has("LoggedinUserData"))){
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private function authenticateUser(LoginDetails $userEnteredLoginDetails){
+        $repository = $this->getDoctrine()->getRepository(LoginDetails::class);
+        $ObjDBLoginDetails = $repository->findOneByUsername($userEnteredLoginDetails->getUsername());
+        if(empty($ObjDBLoginDetails)){
+            $this->addFlash("error", "Invalid Username");
+            return false;
+        }
+        else if(
+            $userEnteredLoginDetails->getUsername() === $ObjDBLoginDetails->getUsername() &&
+            $userEnteredLoginDetails->getPassword() === $ObjDBLoginDetails->getPassword()
+        ){
+            $this->initialiseUserSession($ObjDBLoginDetails);
+            return true;
+         } else {
+             $this->addFlash("error", "Invalid Password");
+             return false;
+         }
     }
 
     /**
      * @Route("/logout/", name="logout")
      */
     public function logoutAction() {
-        die("I have logged out");
+        $session = $this->container->get('session');
+        if(self::authenticateUserSession($session) === false){
+            $this->addFlash("error", "Unauthorised access.");
+        } else {
+            $this->addFlash("success", "You are logged out successfully.");
+            $session->remove("LoggedinUserData");
+        }
+        return $this->redirectToRoute("login");
     }
 
 }

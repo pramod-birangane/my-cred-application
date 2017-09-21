@@ -31,15 +31,15 @@ class LoginDetails
 
     /**
      * @var string
-     * @Assert\NotBlank(message="Username can not be blank")
-     * @Assert\Regex("/^([a-zA-Z]+(.)?[\s]*)$/")
+     * @Assert\NotBlank(message="Please enter username.")
+     * @Assert\Regex("/^([a-zA-Z]+(.)?[\s]*)$/", message="Username should be alphabetic.")
      * @ORM\Column(name="username", type="string", length=50, unique=true)
      */
     private $username;
 
     /**
      * @var string
-     * @Assert\NotBlank(message="Password can not be blank")
+     * @Assert\NotBlank(message="Please enter password.")
      * @ORM\Column(name="password", type="string", length=255)
      */
     private $password;
