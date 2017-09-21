@@ -12,7 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use AdminBundle\Service\CommonFunctions;
-
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 
 class LoginController extends Controller {
@@ -75,8 +75,41 @@ class LoginController extends Controller {
     /**
      * @Route("/forgot-password/", name="forgot_password")
      */
-    public function forgotPasswordAction() {
-        return $this->render('AdminBundle:AdminDesign:forgot_password.html.twig');
+    public function forgotPasswordAction(Request $request) {
+        $objForgotPassword = new ForgotPassword();
+        $formManager = $this->createFormBuilder($objForgotPassword);
+        $formManager->add("username_email", TextType::class);
+        $formManager->add("submit", SubmitType::class);
+        $actualForm = $formManager->getForm();
+        $actualForm->handleRequest($request);
+        if($actualForm->isSubmitted()){
+            if($actualForm->isValid()){
+                $repo = $this->getDoctrine()->getRepository(LoginDetails::class);
+                $query = $repo
+                    ->createQueryBuilder('l')
+                    ->where('l.username = :username_email OR l.email = :username_email')
+                    ->setParameter('username_email', $objForgotPassword->getUsernameEmail())
+                    ->getQuery();
+                $objDBLoginDetails = $query->getResult();
+                if(empty($objDBLoginDetails)){
+                    $this->addFlash("error", "Invalid username/email");
+                } else {
+                    $mailer = $this->get("mailer");
+                    $message = (new \Swift_Message('Test Mail Program'))
+                                ->setSubject('Test Mail Program')
+                                ->setFrom('pramodb.iprogrammer@gmail.com')
+                                ->setTo('pramodb@iprogrammer.com')
+                                ->setBody('Test Mail Program','text/plain');
+                    if($mailer->send($message)){
+                        $this->addFlash("success", "You password has been mailed to your email.");
+                    } else {
+                        $this->addFlash("error", "You password can not be sent to your email id at the moment.");
+                    }
+                }
+            }
+        }
+        $htmlForm = $actualForm->createView();
+        return $this->render('AdminBundle:AdminDesign:forgot_password.html.twig', array("form" => $htmlForm));
     }
 
     /**
@@ -151,4 +184,20 @@ class LoginController extends Controller {
         return $this->redirectToRoute("login");
     }
 
+}
+
+class ForgotPassword
+{
+    /**
+     * @Assert\NotBlank(message="Please enter Username/Email")
+     */
+    private $username_email;
+    
+    public function getUsernameEmail() {
+        return $this->username_email;
+    }
+    
+    public function setUsernameEmail($username_email) {
+        $this->username_email = $username_email;
+    }
 }

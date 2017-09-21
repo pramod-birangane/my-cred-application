@@ -5,8 +5,13 @@ parameters:
     database_name: my_crud_application
     database_user: symfony
     database_password: symfony
-    mailer_transport: smtp
-    mailer_host: 127.0.0.1
-    mailer_user: null
-    mailer_password: null
+    
+    mailer_transport:  gmail
+    mailer_encryption: ssl
+    mailer_auth_mode:  login
+    mailer_host:       smtp.gmail.com
+    mailer_port:       587
+    mailer_user:        pramodb.iprogrammer@gmail.com
+    mailer_password:    Pramod123
+    
     secret: f179e0f32f064bb45e26e4fa2730c4f496f32092
