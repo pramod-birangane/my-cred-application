@@ -140,7 +140,7 @@ class LoginDetails
      */
     public function setPassword($password)
     {
-        $this->password = base64_encode($password);
+        $this->password = $password;
 
         return $this;
     }
@@ -152,8 +152,7 @@ class LoginDetails
      */
     public function getPassword()
     {
-        
-        return base64_decode($this->password);
+        return $this->password;
     }
 
     /**

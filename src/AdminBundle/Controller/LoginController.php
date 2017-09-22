@@ -11,12 +11,16 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\ResetType;
 use AdminBundle\Service\CommonFunctions;
-use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use AdminBundle\Traits\LoginStatus;
+use AdminBundle\TempClasses\ForgotPassword;
+use AdminBundle\TempClasses\ChangePassword;
 
 class LoginController extends Controller {
 
+    use LoginStatus;
     /**
      * @Route("/create-root-user/", name="create_root_user")
      */
@@ -68,8 +72,43 @@ class LoginController extends Controller {
     /**
      * @Route("/change-password/", name="change_password")
      */
-    public function changePasswordAction() {
-        return $this->render('AdminBundle:AdminDesign:change_password.html.twig');
+    public function changePasswordAction(Request $request) {
+        if($this->checkLoginStatus() === false){
+            return $this->redirectToRoute("login");
+        }
+        $objChangePassword = new ChangePassword($objChangePassword);
+        $formManager = $this->createFormBuilder($objChangePassword);
+        $formManager->add("old_password", TextType::class);
+        $formManager->add("new_password", TextType::class);
+        $formManager->add("confirm_password", TextType::class);
+        $formManager->add("change_password", SubmitType::class);
+        $formManager->add("reset_password", ResetType::class);
+        $actualForm = $formManager->getForm();
+        
+        if($actualForm->handleRequest($request)){
+            if($actualForm->isValid()){
+                if($this->getLoggedinuserPassword() !== $objChangePassword->getOldPassword()){
+                    $this->addFlash("error", "Invalid old password");
+                } else if($objChangePassword->getNewPassword() !== $objChangePassword->getConfirmPassword()){
+                    $this->addFlash("error", "New Password and Confirm Password should be same.");
+                } else {
+                    $repo = $this->getDoctrine()->getRepository(LoginDetails::class);
+                    $q = $repo->createQueryBuilder('l')
+                        ->update()
+                        ->set('l.password', ':password')
+                        ->where('l.id = :id')
+                        ->setParameter('password', $objChangePassword->getNewPassword())
+                        ->setParameter('id', $this->getLGID())
+                        ->getQuery();
+                    $q->execute();
+                    $this->setLoggedinuserPassword($objChangePassword->getNewPassword());
+                    $this->addFlash("success", "Password has been changed successfully.");
+                }
+            }
+        }
+        
+        $htmlForm = $actualForm->createView();
+        return $this->render('AdminBundle:AdminDesign:change_password.html.twig', array("form" => $htmlForm));
     }
 
     /**
@@ -174,30 +213,12 @@ class LoginController extends Controller {
      * @Route("/logout/", name="logout")
      */
     public function logoutAction() {
-        $session = $this->container->get('session');
-        if(self::authenticateUserSession($session) === false){
-            $this->addFlash("error", "Unauthorised access.");
-        } else {
+        
+        if($this->checkLoginStatus() === true) {
             $this->addFlash("success", "You are logged out successfully.");
-            $session->remove("LoggedinUserData");
+            $this->container->get('session')->remove("LoggedinUserData");
         }
         return $this->redirectToRoute("login");
     }
 
-}
-
-class ForgotPassword
-{
-    /**
-     * @Assert\NotBlank(message="Please enter Username/Email")
-     */
-    private $username_email;
-    
-    public function getUsernameEmail() {
-        return $this->username_email;
-    }
-    
-    public function setUsernameEmail($username_email) {
-        $this->username_email = $username_email;
-    }
 }

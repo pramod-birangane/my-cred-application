@@ -4,17 +4,16 @@ namespace AdminBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use AdminBundle\Controller\LoginController;
+use AdminBundle\Traits\LoginStatus;
 
 class ProductsController extends Controller {
 
+    use LoginStatus;
     /**
      * @Route("/products/", name="products")
      */
     public function productsAction() {
-        $session = $this->container->get("session");
-        if(LoginController::authenticateUserSession($session) === false){
-            $this->addFlash("error", "Unauthorised access");
+        if($this->checkLoginStatus() === false){
             return $this->redirectToRoute("login");
         }
         return $this->render("AdminBundle:AdminDesign:products.html.twig");
