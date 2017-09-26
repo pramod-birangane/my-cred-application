@@ -152,6 +152,7 @@ class LoginController extends Controller {
     }
 
     /**
+     * @Route("/", name="index_login")
      * @Route("/login/", name="login")
      */
     public function loginAction(Request $request) {

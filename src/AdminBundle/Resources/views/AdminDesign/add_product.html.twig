@@ -15,10 +15,16 @@
                     <td id="tbl-border-left"></td>
                     <td>
                         {{ form_start(form) }}
+                        {{ form_widget(form.id) }}
                         <div id="content-table-inner">
                             <table border="0" width="100%" cellpadding="0" cellspacing="0">
                                 <tr valign="top">
                                     <td>
+                                        {% if app.session.flashBag.has('success')|length %}
+                                            {% for message in app.session.flashBag.get('success') %}
+                                                <div class="green-text">{{ message }}</div>
+                                            {% endfor %}
+                                        {% endif %}
                                         {% if app.session.flashBag.has('error')|length %}
                                             {% for message in app.session.flashBag.get('error') %}
                                                 <div class="red-text">{{ message }}</div>
@@ -76,6 +82,9 @@
                                                     <div class="bubble-left"></div>
                                                     <div class="bubble-inner">JPEG, GIF 5MB max per image</div>
                                                     <div class="bubble-right"></div>
+                                                    {% if data.product.getPhoto(true) is defined and data.product.getPhoto(true)|length %}
+                                                        <img src="{{ asset(data.product.getPhoto(true)) }}" height="100" />
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             <tr>

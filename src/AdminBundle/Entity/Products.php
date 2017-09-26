@@ -63,6 +63,9 @@ class Products
      */
     private $lastUpdated;
 
+    public function setId($id) {
+        $this->id = $id;
+    }
 
     /**
      * Get id
@@ -141,9 +144,13 @@ class Products
      *
      * @return string
      */
-    public function getPhoto()
+    public function getPhoto($fullPath = false)
     {
-        return $this->photo;
+        if($fullPath == true){
+            return "uploads/" . $this->photo;
+        } else {
+            return $this->photo;
+        }
     }
 
     /**
